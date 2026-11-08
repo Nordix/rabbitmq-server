@@ -2,10 +2,14 @@ FROM ubuntu:20.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG OTP_VERSION
+ARG ELIXIR_VERSION=1.10.4
 
 ENV ERLANG_PREFIX=/opt/erlang
 ENV ELIXIR_PREFIX=/opt/elixir
 ENV PATH=/opt/elixir/bin:/opt/erlang/bin:${PATH}
+ENV LANG=C.UTF-8
+ENV LANGUAGE=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     autoconf \
@@ -54,13 +58,15 @@ RUN set -eux; \
       --retry 3 \
       --retry-delay 5 \
       --retry-connrefused \
-      "https://github.com/elixir-lang/elixir/releases/download/v1.9.4/Precompiled.zip" \
+      "https://github.com/elixir-lang/elixir/releases/download/v${ELIXIR_VERSION}/Precompiled.zip" \
       -o /tmp/elixir.zip; \
     mkdir -p "${ELIXIR_PREFIX}"; \
     unzip -q /tmp/elixir.zip -d "${ELIXIR_PREFIX}"; \
     rm /tmp/elixir.zip
 
 RUN set -eux; \
+    mix local.hex --force; \
+    mix local.rebar --force; \
     erl -noshell \
       -eval 'io:format("OTP ~s~n", [erlang:system_info(otp_release)]), halt().'; \
     elixir --version; \
