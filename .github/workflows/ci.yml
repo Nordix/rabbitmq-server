@@ -1,54 +1,51 @@
-name: CI
+FROM ubuntu:20.04
 
-on:
-  push:
-    branches: [ '3.8.9-est', 'add-github-actions-ci' ]
-  pull_request:
-    branches: [ '3.8.9-est' ]
+ARG DEBIAN_FRONTEND=noninteractive
+ARG OTP_VERSION
 
-jobs:
-  test:
-    runs-on: ubuntu-22.04
-    env:
-      base_rmq_ref: v3.8.x
-      current_rmq_ref: 3.8.9-est
-      ImageOS: ubuntu22
+ENV ERLANG_PREFIX=/opt/erlang
+ENV ELIXIR_PREFIX=/opt/elixir
+ENV PATH=/opt/elixir/bin:/opt/erlang/bin:${PATH}
 
-    steps:
-      - uses: actions/checkout@v3
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    autoconf \
+    build-essential \
+    ca-certificates \
+    curl \
+    git \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    libncurses5-dev \
+    libpng-dev \
+    libssl-dev \
+    libwxgtk3.0-gtk3-dev \
+    m4 \
+    make \
+    perl \
+    unixodbc-dev \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
 
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential autoconf m4 libncurses5-dev \
-            libssl-dev libwxgtk3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev \
-            libpng-dev unixodbc-dev
+RUN set -eux; \
+    curl -fsSL "https://erlang.org/download/otp_src_${OTP_VERSION}.tar.gz" \
+      -o /tmp/otp.tar.gz; \
+    mkdir -p /tmp/otp-src; \
+    tar -xzf /tmp/otp.tar.gz -C /tmp/otp-src --strip-components=1; \
+    cd /tmp/otp-src; \
+    ./configure --prefix="${ERLANG_PREFIX}"; \
+    make -j"$(nproc)"; \
+    make install; \
+    rm -rf /tmp/otp-src /tmp/otp.tar.gz
 
-      - name: Install kerl
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/kerl/kerl/master/kerl \
-            -o /tmp/kerl
-          chmod +x /tmp/kerl
-          sudo mv /tmp/kerl /usr/local/bin/kerl
+RUN set -eux; \
+    curl -fsSL \
+      "https://github.com/elixir-lang/elixir/releases/download/v1.9.4/Precompiled.zip" \
+      -o /tmp/elixir.zip; \
+    mkdir -p "${ELIXIR_PREFIX}"; \
+    unzip -q /tmp/elixir.zip -d "${ELIXIR_PREFIX}"; \
+    rm /tmp/elixir.zip
 
-      - name: Build and install Erlang/OTP 22
-        run: |
-          kerl build 22.3 otp-22.3
-          kerl install otp-22.3 "$HOME/erlang-22.3"
-          echo "$HOME/erlang-22.3/bin" >> "$GITHUB_PATH"
-          "$HOME/erlang-22.3/bin/erl" -noshell \
-            -eval 'io:format("OTP ~s~n", [erlang:system_info(otp_release)]), halt().'
+RUN erl -noshell -eval 'io:format("OTP ~s~n", [erlang:system_info(otp_release)]), halt().' \
+    && elixir --version
 
-      - name: Install Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: '1.9.4'
-
-      - name: Check components
-        run: make check-rabbitmq-components.mk current_rmq_ref=3.8.9-est
-
-      - name: xref
-        run: make xref current_rmq_ref=3.8.9-est
-
-      - name: ct-fast
-        run: make ct-fast current_rmq_ref=3.8.9-est
+WORKDIR /workspace
