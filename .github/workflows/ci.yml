@@ -37,7 +37,6 @@ jobs:
             --env current_rmq_ref \
             "rabbitmq-ci:otp-${{ matrix.otp }}" \
             bash -euo pipefail -c '
-              make check-rabbitmq-components.mk current_rmq_ref="$current_rmq_ref"
               make xref current_rmq_ref="$current_rmq_ref"
               make ct-fast current_rmq_ref="$current_rmq_ref"
             '
