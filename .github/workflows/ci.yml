@@ -13,23 +13,38 @@ jobs:
       base_rmq_ref: v3.8.x
       current_rmq_ref: 3.8.9-est
       ImageOS: ubuntu22
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install build deps for Erlang
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential autoconf m4 libncurses5-dev \
             libssl-dev libwxgtk3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev \
             libpng-dev unixodbc-dev
 
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: '22'
-          elixir-version: '1.9.4'
-          version-type: strict
+      - name: Install kerl
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/kerl/kerl/master/kerl \
+            -o /tmp/kerl
+          chmod +x /tmp/kerl
+          sudo mv /tmp/kerl /usr/local/bin/kerl
 
-      - name: check components
+      - name: Build and install Erlang/OTP 22
+        run: |
+          kerl build 22.3 otp-22.3
+          kerl install otp-22.3 "$HOME/erlang-22.3"
+          echo "$HOME/erlang-22.3/bin" >> "$GITHUB_PATH"
+          "$HOME/erlang-22.3/bin/erl" -noshell \
+            -eval 'io:format("OTP ~s~n", [erlang:system_info(otp_release)]), halt().'
+
+      - name: Install Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.9.4'
+
+      - name: Check components
         run: make check-rabbitmq-components.mk current_rmq_ref=3.8.9-est
 
       - name: xref
