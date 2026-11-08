@@ -27,7 +27,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN set -eux; \
-    curl -fsSL "https://erlang.org/download/otp_src_${OTP_VERSION}.tar.gz" \
+    test -n "${OTP_VERSION}"; \
+    curl --fail --show-error --location \
+      --connect-timeout 15 \
+      --max-time 300 \
+      --retry 3 \
+      --retry-delay 5 \
+      --retry-connrefused \
+      "https://github.com/erlang/otp/archive/refs/tags/OTP-${OTP_VERSION}.tar.gz" \
       -o /tmp/otp.tar.gz; \
     mkdir -p /tmp/otp-src; \
     tar -xzf /tmp/otp.tar.gz -C /tmp/otp-src --strip-components=1; \
@@ -38,14 +45,21 @@ RUN set -eux; \
     rm -rf /tmp/otp-src /tmp/otp.tar.gz
 
 RUN set -eux; \
-    curl -fsSL \
+    curl --fail --show-error --location \
+      --connect-timeout 15 \
+      --max-time 300 \
+      --retry 3 \
+      --retry-delay 5 \
+      --retry-connrefused \
       "https://github.com/elixir-lang/elixir/releases/download/v1.9.4/Precompiled.zip" \
       -o /tmp/elixir.zip; \
     mkdir -p "${ELIXIR_PREFIX}"; \
     unzip -q /tmp/elixir.zip -d "${ELIXIR_PREFIX}"; \
     rm /tmp/elixir.zip
 
-RUN erl -noshell -eval 'io:format("OTP ~s~n", [erlang:system_info(otp_release)]), halt().' \
-    && elixir --version
+RUN set -eux; \
+    erl -noshell \
+      -eval 'io:format("OTP ~s~n", [erlang:system_info(otp_release)]), halt().'; \
+    elixir --version
 
 WORKDIR /workspace
