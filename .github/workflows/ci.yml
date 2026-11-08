@@ -1,51 +1,43 @@
-FROM ubuntu:20.04
+name: CI
 
-ARG DEBIAN_FRONTEND=noninteractive
-ARG OTP_VERSION
+on:
+  push:
+    branches: [ '3.8.9-est', 'add-github-actions-ci' ]
+  pull_request:
+    branches: [ '3.8.9-est' ]
 
-ENV ERLANG_PREFIX=/opt/erlang
-ENV ELIXIR_PREFIX=/opt/elixir
-ENV PATH=/opt/elixir/bin:/opt/erlang/bin:${PATH}
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        otp: [ '21.3', '22.2' ]
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    autoconf \
-    build-essential \
-    ca-certificates \
-    curl \
-    git \
-    libgl1-mesa-dev \
-    libglu1-mesa-dev \
-    libncurses5-dev \
-    libpng-dev \
-    libssl-dev \
-    libwxgtk3.0-gtk3-dev \
-    m4 \
-    make \
-    perl \
-    unixodbc-dev \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
+    env:
+      base_rmq_ref: v3.8.x
+      current_rmq_ref: 3.8.9-est
 
-RUN set -eux; \
-    curl -fsSL "https://erlang.org/download/otp_src_${OTP_VERSION}.tar.gz" \
-      -o /tmp/otp.tar.gz; \
-    mkdir -p /tmp/otp-src; \
-    tar -xzf /tmp/otp.tar.gz -C /tmp/otp-src --strip-components=1; \
-    cd /tmp/otp-src; \
-    ./configure --prefix="${ERLANG_PREFIX}"; \
-    make -j"$(nproc)"; \
-    make install; \
-    rm -rf /tmp/otp-src /tmp/otp.tar.gz
+    steps:
+      - uses: actions/checkout@v3
 
-RUN set -eux; \
-    curl -fsSL \
-      "https://github.com/elixir-lang/elixir/releases/download/v1.9.4/Precompiled.zip" \
-      -o /tmp/elixir.zip; \
-    mkdir -p "${ELIXIR_PREFIX}"; \
-    unzip -q /tmp/elixir.zip -d "${ELIXIR_PREFIX}"; \
-    rm /tmp/elixir.zip
+      - name: Build CI image
+        run: |
+          docker build \
+            --build-arg OTP_VERSION="${{ matrix.otp }}" \
+            --tag "rabbitmq-ci:otp-${{ matrix.otp }}" \
+            .
 
-RUN erl -noshell -eval 'io:format("OTP ~s~n", [erlang:system_info(otp_release)]), halt().' \
-    && elixir --version
-
-WORKDIR /workspace
+      - name: Run checks
+        run: |
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --workdir /workspace \
+            --env base_rmq_ref \
+            --env current_rmq_ref \
+            "rabbitmq-ci:otp-${{ matrix.otp }}" \
+            bash -euo pipefail -c '
+              make check-rabbitmq-components.mk current_rmq_ref="$current_rmq_ref"
+              make xref current_rmq_ref="$current_rmq_ref"
+              make ct-fast current_rmq_ref="$current_rmq_ref"
+            '
