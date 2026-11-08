@@ -16,7 +16,7 @@ jobs:
 
     env:
       base_rmq_ref: v3.8.x
-      current_rmq_ref: 3.8.9-est
+      current_rmq_ref: ${{ github.head_ref || github.ref_name }}
 
     steps:
       - uses: actions/checkout@v3
