@@ -13,10 +13,10 @@ jobs:
       fail-fast: false
       matrix:
         otp: [ '21.3', '22.2' ]
-
+    
     env:
       base_rmq_ref: v3.8.x
-      current_rmq_ref: ${{ github.head_ref || github.ref_name }}
+      current_rmq_ref: 3.8.9-est
 
     steps:
       - uses: actions/checkout@v3
