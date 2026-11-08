@@ -39,6 +39,7 @@ RUN set -eux; \
     mkdir -p /tmp/otp-src; \
     tar -xzf /tmp/otp.tar.gz -C /tmp/otp-src --strip-components=1; \
     cd /tmp/otp-src; \
+    ./otp_build autoconf; \
     ./configure --prefix="${ERLANG_PREFIX}"; \
     make -j"$(nproc)"; \
     make install; \
