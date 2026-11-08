@@ -22,6 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     m4 \
     make \
     perl \
+    python3 \
+    python-is-python3 \
     unixodbc-dev \
     unzip \
     && rm -rf /var/lib/apt/lists/*
@@ -61,6 +63,7 @@ RUN set -eux; \
 RUN set -eux; \
     erl -noshell \
       -eval 'io:format("OTP ~s~n", [erlang:system_info(otp_release)]), halt().'; \
-    elixir --version
+    elixir --version; \
+    python --version
 
 WORKDIR /workspace
