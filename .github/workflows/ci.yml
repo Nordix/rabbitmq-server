@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       base_rmq_ref: v3.8.x
       current_rmq_ref: 3.8.9-est
