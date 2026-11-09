@@ -38,6 +38,21 @@ jobs:
             --env current_rmq_ref \
             "rabbitmq-ci:otp-${{ matrix.otp }}" \
             bash -euo pipefail -c '
+              make fetch-deps current_rmq_ref="$current_rmq_ref"
+
+              # Fix missing internal_user record in rabbit_common (removed in a later commit)
+              python3 -c "
+import re, sys
+content = open('deps/rabbit_common/include/rabbit.hrl').read()
+record = '\n-record(internal_user, {username, password_hash, tags, hashing_algorithm, limits = #{}}).\n'
+content = content.replace('-record(permission,', record + '-record(permission,')
+open('deps/rabbit_common/include/rabbit.hrl', 'w').write(content)
+"
+
+              # Fix invalid deprecated attribute string form (only valid in OTP 23+)
+              sed -i "s/-deprecated({is_mixed_versions,1,\"Use is_mixed_versions\/0 instead\"})/-deprecated({is_mixed_versions,1,eventually})/" \
+                deps/rabbitmq_ct_helpers/src/rabbit_ct_helpers.erl
+
               make current_rmq_ref="$current_rmq_ref"
               make check-rabbitmq-components.mk current_rmq_ref="$current_rmq_ref"
               make xref current_rmq_ref="$current_rmq_ref"
