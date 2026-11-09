@@ -28,6 +28,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     perl \
     python3 \
     python-is-python3 \
+    rsync \
+    zip \
     unixodbc-dev \
     unzip \
     && rm -rf /var/lib/apt/lists/*

@@ -181,6 +181,7 @@ tests:: bats
 
 SLOW_CT_SUITES := backing_queue \
 		  channel_interceptor \
+		  channel_operation_timeout \
 		  cluster \
 		  cluster_rename \
 		  clustering_management \
@@ -188,16 +189,24 @@ SLOW_CT_SUITES := backing_queue \
 		  confirms_rejects \
 		  consumer_timeout \
 		  crashing_queues \
+		  dead_lettering \
+		  definition_import \
+		  disconnect_detected_during_alarm \
 		  dynamic_ha \
 		  dynamic_qq \
 		  eager_sync \
 		  feature_flags \
 		  health_check \
 		  lazy_queue \
+		  list_consumers_sanity_check \
+		  list_queues_online_and_offline \
+		  maintenance_mode \
 		  many_node_ha \
+		  message_size_limit \
 		  metrics \
 		  msg_store \
 		  partitions \
+		  peer_discovery_classic_config \
 		  per_user_connection_tracking \
 		  per_vhost_connection_limit \
 		  per_vhost_connection_limit_partitions \
@@ -206,7 +215,10 @@ SLOW_CT_SUITES := backing_queue \
 		  policy \
 		  priority_queue \
 		  priority_queue_recovery \
+		  product_info \
+		  proxy_protocol \
 		  publisher_confirms_parallel \
+		  queue_length_limits \
 		  queue_master_location \
 		  queue_parallel \
 		  quorum_queue \
@@ -214,10 +226,30 @@ SLOW_CT_SUITES := backing_queue \
 		  rabbit_fifo_prop \
 		  rabbitmq_queues_cli_integration \
 		  rabbitmqctl_integration \
+		  rabbitmqctl_shutdown \
+		  signal_handling \
 		  simple_ha \
+		  single_active_consumer \
 		  sync_detection \
+		  topic_permission \
+		  unit_access_control \
+		  unit_access_control_authn_authz_context_propagation \
+		  unit_access_control_credential_validation \
+		  unit_amqp091_server_properties \
+		  unit_app_management \
+		  unit_connection_tracking \
+		  unit_credit_flow \
+		  unit_disk_monitor \
+		  unit_disk_monitor_mocks \
+		  unit_file_handle_cache \
+		  unit_gen_server2 \
 		  unit_inbroker_non_parallel \
 		  unit_inbroker_parallel \
+		  unit_log_management \
+		  unit_policy_validators \
+		  unit_stats_and_metrics \
+		  unit_vm_memory_monitor \
+		  upgrade_preparation \
 		  vhost
 FAST_CT_SUITES := $(filter-out $(sort $(SLOW_CT_SUITES)),$(CT_SUITES))
 

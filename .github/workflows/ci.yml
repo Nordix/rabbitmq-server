@@ -33,10 +33,13 @@ jobs:
           docker run --rm \
             --volume "$GITHUB_WORKSPACE:/workspace" \
             --workdir /workspace \
+            --hostname rabbitmq-ci \
             --env base_rmq_ref \
             --env current_rmq_ref \
             "rabbitmq-ci:otp-${{ matrix.otp }}" \
             bash -euo pipefail -c '
+              make current_rmq_ref="$current_rmq_ref"
+              make check-rabbitmq-components.mk current_rmq_ref="$current_rmq_ref"
               make xref current_rmq_ref="$current_rmq_ref"
               make ct-fast current_rmq_ref="$current_rmq_ref"
             '
