@@ -19,7 +19,7 @@ jobs:
       current_rmq_ref: 3.8.9-est
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Build CI image
         run: |
@@ -41,5 +41,6 @@ jobs:
               make fetch-deps current_rmq_ref="$current_rmq_ref"
               make current_rmq_ref="$current_rmq_ref"
               make xref current_rmq_ref="$current_rmq_ref"
-              make ct CT_SUITES="unit_amqp091_content_framing unit_cluster_formation_locking_mocks unit_collections unit_config_value_encryption unit_gm unit_log_config unit_operator_policy unit_pg_local unit_plugin_directories unit_priority_queue unit_queue_consumers unit_supervisor2" current_rmq_ref="$current_rmq_ref"
+              epmd -daemon
+              make ct-fast current_rmq_ref="$current_rmq_ref"
             '
