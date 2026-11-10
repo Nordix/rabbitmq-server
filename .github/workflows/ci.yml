@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ '3.8.9-est', 'add-github-actions-ci' ]
+    branches: [ 'v3.8.9-est', 'add-github-actions-ci' ]
   pull_request:
-    branches: [ '3.8.9-est' ]
+    branches: [ 'v3.8.9-est' ]
 
 jobs:
   test:
@@ -16,7 +16,7 @@ jobs:
 
     env:
       base_rmq_ref: v3.8.x
-      current_rmq_ref: 3.8.9-est
+      current_rmq_ref: v3.8.9-est
 
     steps:
       - uses: actions/checkout@v4
