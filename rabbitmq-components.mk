@@ -57,11 +57,11 @@ dep_rabbitmq_cli                      = git_rmq rabbitmq-cli $(current_rmq_ref) 
 dep_rabbitmq_codegen                  = git_rmq rabbitmq-codegen $(current_rmq_ref) $(base_rmq_ref) master
 dep_rabbitmq_consistent_hash_exchange = git_rmq rabbitmq-consistent-hash-exchange $(current_rmq_ref) $(base_rmq_ref) master
 dep_rabbitmq_ct_client_helpers        = git_rmq rabbitmq-ct-client-helpers $(current_rmq_ref) $(base_rmq_ref) master
-# Pin to 3ed1201: last commit on v3.8.x before -deprecated({...,eventually}) was
-# added in ad04061, which requires OTP 24+ and fails to compile on OTP 21/22.
+# Pin to e935a90: last commit on v3.8.x before 7428c06 switched rpc:call to
+# erpc:call. erpc was introduced in OTP 23 and is undefined on OTP 21/22.
 # Uses git (not git_rmq) with full hash because git_rmq's clone-then-checkout
-# cannot resolve mid-branch short hashes without a prior fetch.
-dep_rabbitmq_ct_helpers               = git https://github.com/rabbitmq/rabbitmq-ct-helpers.git 3ed120113c90d5725e8e67978c52f7409ad7958a
+# cannot resolve mid-branch commits without a prior fetch.
+dep_rabbitmq_ct_helpers               = git https://github.com/rabbitmq/rabbitmq-ct-helpers.git e935a90be04813bc4de10b498fafdc4ae4e9bcbb
 dep_rabbitmq_delayed_message_exchange = git_rmq rabbitmq-delayed-message-exchange $(current_rmq_ref) $(base_rmq_ref) master
 dep_rabbitmq_dotnet_client            = git_rmq rabbitmq-dotnet-client $(current_rmq_ref) $(base_rmq_ref) master
 dep_rabbitmq_event_exchange           = git_rmq rabbitmq-event-exchange $(current_rmq_ref) $(base_rmq_ref) master
