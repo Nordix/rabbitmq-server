@@ -17,8 +17,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     git \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
     libncurses5-dev \
+    libpng-dev \
     libssl-dev \
+    libwxgtk3.0-gtk3-dev \
     m4 \
     make \
     perl \
@@ -44,7 +48,7 @@ RUN set -eux; \
     tar -xzf /tmp/otp.tar.gz -C /tmp/otp-src --strip-components=1; \
     cd /tmp/otp-src; \
     ./otp_build autoconf; \
-    ./configure --prefix="${ERLANG_PREFIX}" --without-wx; \
+    ./configure --prefix="${ERLANG_PREFIX}"; \
     make -j"$(nproc)"; \
     make install; \
     rm -rf /tmp/otp-src /tmp/otp.tar.gz
