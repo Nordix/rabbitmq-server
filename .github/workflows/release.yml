@@ -26,9 +26,14 @@ jobs:
             --workdir /workspace \
             --env base_rmq_ref="${{ env.base_rmq_ref }}" \
             --env current_rmq_ref="${{ env.current_rmq_ref }}" \
+            --env RELEASE_TAG="${{ github.ref_name }}" \
             "rabbitmq-ci:otp-${{ env.OTP_VERSION }}" \
-            bash -euo pipefail -c 'make dist PROJECT_VERSION=3.8.9-est && find . -name "*.tar.xz" -print'
-          mv rabbitmq-server-generic-unix-3.8.9-est.tar.xz "rabbitmq-server-${{ github.ref_name }}.tar.xz"
+            bash -euo pipefail -c '
+              VERSION="$RELEASE_TAG"; VERSION="${VERSION#v}"
+              make dist PROJECT_VERSION="$VERSION" && find . -name "*.tar.xz" -print
+            '
+          VERSION="${{ github.ref_name }}"; VERSION="${VERSION#v}"
+          mv "rabbitmq-server-generic-unix-${VERSION}.tar.xz" "rabbitmq-server-${{ github.ref_name }}.tar.xz"
           sha256sum "rabbitmq-server-${{ github.ref_name }}.tar.xz" \
             > "rabbitmq-server-${{ github.ref_name }}.tar.xz.sha256"
 
