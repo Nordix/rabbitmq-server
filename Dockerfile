@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:20.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG OTP_VERSION
@@ -13,7 +13,6 @@ ENV LC_ALL=C.UTF-8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     autoconf \
-    automake \
     build-essential \
     ca-certificates \
     curl \
