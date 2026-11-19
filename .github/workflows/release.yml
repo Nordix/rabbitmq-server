@@ -28,10 +28,13 @@ jobs:
             --env current_rmq_ref="${{ env.current_rmq_ref }}" \
             "rabbitmq-ci:otp-${{ env.OTP_VERSION }}" \
             bash -euo pipefail -c 'make dist && find . -name "*.tar.xz" -print'
-          TARBALL=$(find PACKAGES/ -name "*.tar.xz")
-          mv "$TARBALL" "PACKAGES/rabbitmq-server-${{ github.ref_name }}.tar.xz"
-          sha256sum "PACKAGES/rabbitmq-server-${{ github.ref_name }}.tar.xz" \
-            > "PACKAGES/rabbitmq-server-${{ github.ref_name }}.tar.xz.sha256"
+          TARBALL=$(find . -name "*.tar.xz" | head -1)
+          echo "Found tarball: $TARBALL"
+          TARBALL_DIR=$(dirname "$TARBALL")
+          mv "$TARBALL" "$TARBALL_DIR/rabbitmq-server-${{ github.ref_name }}.tar.xz"
+          sha256sum "$TARBALL_DIR/rabbitmq-server-${{ github.ref_name }}.tar.xz" \
+            > "$TARBALL_DIR/rabbitmq-server-${{ github.ref_name }}.tar.xz.sha256"
+          echo "TARBALL_DIR=$TARBALL_DIR" >> $GITHUB_ENV
 
       - name: Publish to Artifactory
         uses: jfrog/setup-jfrog-cli@v4
@@ -43,7 +46,7 @@ jobs:
 
       - run: |
           jf rt upload \
-            "PACKAGES/rabbitmq-server-${{ github.ref_name }}.*" \
+            "${{ env.TARBALL_DIR }}/rabbitmq-server-${{ github.ref_name }}.*" \
             "allies-erlang/rabbitmq-server/${{ github.ref_name }}/" \
             --build-name="rabbitmq-server" \
             --build-number="${{ github.run_number }}"
