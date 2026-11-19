@@ -29,6 +29,8 @@ jobs:
             '
           find packaging/ -name '*.tar.xz'
           mv packaging/generic-unix/*.tar.xz "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.tar.xz"
+          sha256sum "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.tar.xz" \
+            > "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.tar.xz.sha256"
 
       - name: Publish to Artifactory
         uses: jfrog/setup-jfrog-cli@v4
@@ -40,7 +42,7 @@ jobs:
 
       - run: |
           jf rt upload \
-            "packaging/generic-unix/*.tar.xz" \
+            "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.*" \
             "allies-erlang/rabbitmq-server/${{ github.ref_name }}/" \
             --build-name="rabbitmq-server" \
             --build-number="${{ github.run_number }}"
