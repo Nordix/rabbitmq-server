@@ -24,8 +24,7 @@ jobs:
             --workdir /workspace \
             "rabbitmq-ci:otp-${{ env.OTP_VERSION }}" \
             bash -euo pipefail -c 'make dist'
-          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-          mv packaging/generic-unix/*.tar.xz "packaging/generic-unix/rabbitmq-server-${VERSION}.tar.xz"
+          mv packaging/generic-unix/*.tar.xz "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.tar.xz"
 
       - name: Publish to Artifactory
         uses: jfrog/setup-jfrog-cli@v4
