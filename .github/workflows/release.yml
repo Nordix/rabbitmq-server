@@ -23,7 +23,11 @@ jobs:
             --volume "$GITHUB_WORKSPACE:/workspace" \
             --workdir /workspace \
             "rabbitmq-ci:otp-${{ env.OTP_VERSION }}" \
-            bash -euo pipefail -c 'make dist'
+            bash -euo pipefail -c '
+              make dist dep_rabbitmq_codegen="git_rmq rabbitmq-codegen 0156a54" \
+                && find packaging/ -name "*.tar.xz" -print
+            '
+          find packaging/ -name '*.tar.xz'
           mv packaging/generic-unix/*.tar.xz "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.tar.xz"
 
       - name: Publish to Artifactory
