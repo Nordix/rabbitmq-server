@@ -7,63 +7,31 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-22.04
-
-    container:
-      image: ubuntu:20.04
-      options: --user root
-
     env:
-      DEBIAN_FRONTEND: noninteractive
-      GIT_TERMINAL_PROMPT: '0'
+      OTP_VERSION: '22.2'
+      base_rmq_ref: v3.8.x
+      current_rmq_ref: v3.8.9-est
 
     steps:
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y --fix-missing --no-install-recommends \
-            build-essential \
-            ca-certificates \
-            debhelper \
-            elinks \
-            erlang \
-            elixir \
-            fakeroot \
-            git \
-            libfile-fcntllock-perl \
-            mandoc \
-            nsis \
-            python3-lxml \
-            python3-markdown \
-            python3-simplejson \
-            rpm \
-            rsync \
-            tofrodos \
-            unzip \
-            xmlto \
-            xsltproc \
-            zip \
-            curl
-
-      - name: Checkout rabbitmq-server-release
-        run: |
-          git config --global --add safe.directory '*'
-          git config --global url."https://github.com/".insteadOf git@github.com:
-          git clone --branch ${{ github.ref_name }} \
-            https://github.com/Nordix/rabbitmq-server-release.git \
-            rabbitmq-server-release
+      - uses: actions/checkout@v4
 
       - name: Build artifact
-        working-directory: rabbitmq-server-release
         run: |
-          rm -rf deps .erlang.mk
-          make source-dist \
-            PROJECT_VERSION=${{ github.ref_name }} \
-            base_rmq_ref=v3.8.9 \
-            dep_rabbit="git https://github.com/Nordix/rabbitmq-server.git ${{ github.ref_name }}" \
-            dep_rabbitmq_management="git https://github.com/Nordix/rabbitmq-management.git ${{ github.ref_name }}" \
-            dep_rabbitmq_federation_management="git https://github.com/Nordix/rabbitmq-federation-management.git ${{ github.ref_name }}" \
-            dep_rabbitmq_amqp1_0="git https://github.com/Nordix/rabbitmq-amqp1.0-common.git ${{ github.ref_name }}"
-          sha256sum PACKAGES/*.tar.xz > PACKAGES/rabbitmq-server-${{ github.ref_name }}.tar.xz.sha256
+          docker build \
+            --build-arg OTP_VERSION="${{ env.OTP_VERSION }}" \
+            --tag "rabbitmq-ci:otp-${{ env.OTP_VERSION }}" \
+            .
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --workdir /workspace \
+            --env base_rmq_ref="${{ env.base_rmq_ref }}" \
+            --env current_rmq_ref="${{ env.current_rmq_ref }}" \
+            "rabbitmq-ci:otp-${{ env.OTP_VERSION }}" \
+            bash -euo pipefail -c 'make dist && find packaging/ -name "*.tar.xz" -print'
+          find packaging/ -name '*.tar.xz'
+          mv packaging/generic-unix/*.tar.xz "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.tar.xz"
+          sha256sum "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.tar.xz" \
+            > "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.tar.xz.sha256"
 
       - name: Publish to Artifactory
         uses: jfrog/setup-jfrog-cli@v4
@@ -75,7 +43,7 @@ jobs:
 
       - run: |
           jf rt upload \
-            "rabbitmq-server-release/PACKAGES/*" \
+            "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.*" \
             "allies-erlang/rabbitmq-server/${{ github.ref_name }}/" \
             --build-name="rabbitmq-server" \
             --build-number="${{ github.run_number }}"
