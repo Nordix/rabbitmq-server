@@ -24,8 +24,10 @@ jobs:
             --workdir /workspace \
             "rabbitmq-ci:otp-${{ env.OTP_VERSION }}" \
             bash -euo pipefail -c '
-              make dist dep_rabbitmq_codegen="git_rmq rabbitmq-codegen 0156a54" \
-                && find packaging/ -name "*.tar.xz" -print
+              make fetch-deps;
+              find /workspace/deps -name "rabbitmq-components.mk" | xargs sed -i \
+                "s|dep_rabbitmq_codegen\s*=.*|dep_rabbitmq_codegen = git_rmq rabbitmq-codegen 0156a54|";
+              make dist && find packaging/ -name "*.tar.xz" -print
             '
           find packaging/ -name '*.tar.xz'
           mv packaging/generic-unix/*.tar.xz "packaging/generic-unix/rabbitmq-server-${{ github.ref_name }}.tar.xz"
